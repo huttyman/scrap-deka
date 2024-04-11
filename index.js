@@ -21,23 +21,30 @@ async function run() {
 
  
   // Initialization of the CSV content with headers
-  let csvContent = "topic,doc_id\n";
+  let csvContent = "topic,doc_id,s_text,l_text,page,year\n";
 
   let hasNextPage = true;
+  let pageNumber = 0;
 
   while (hasNextPage) {
     // Wait for the elements to be loaded
+    pageNumber++;
+    if(pageNumber == 3)
+      hasNextPage = false;
     await page.waitForSelector('.clear > ul', { timeout: 5000 });
 
     // Retrieve and iterate through the list of elements
     const listItems = await page.$$('.clear > ul');
     for (const item of listItems) {
       // Fetch the value from .deka-result and the text from label.css-label
-      const value = await item.$eval('.deka-result', el => el.value); // Make sure .deka-result is correct
-      const text = await item.$eval('label.css-label', el => el.textContent);
+      const doc_id = await item.$eval('.deka-result', el => el.value); // Make sure .deka-result is correct
+      const topic = await item.$eval('label.css-label', el => el.textContent);
+      const s_text = await item.$eval('.item_short_text p:nth-of-type(2)', el => el.textContent);
+      const l_text = await item.$eval('li.item_long_text', el => el.textContent);
+      const year = await item.$eval('label span', el => el.textContent);
 
       // Append the fetched data to the CSV string
-      csvContent += `"${text}","${value}"\n`;
+      csvContent += `"${topic}","${doc_id}","${s_text}","${l_text}","${pageNumber}","${year}"\n`;
     }
 
     // Check for the "Next Page" button and click if available
