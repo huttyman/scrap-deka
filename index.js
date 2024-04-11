@@ -29,8 +29,6 @@ async function run() {
   while (hasNextPage) {
     // Wait for the elements to be loaded
     pageNumber++;
-    if(pageNumber == 3)
-      hasNextPage = false;
     await page.waitForSelector('.clear > ul', { timeout: 5000 });
 
     // Retrieve and iterate through the list of elements
@@ -38,7 +36,7 @@ async function run() {
     for (const item of listItems) {
       // Fetch the value from .deka-result and the text from label.css-label
       const doc_id = await item.$eval('.deka-result', el => el.value); // Make sure .deka-result is correct
-      const topic = await item.$eval('label.css-label', el => el.textContent);
+      const topic = await item.$eval('.show-display-left label', el => el.textContent);
       const s_text = await item.$eval('.item_short_text p:nth-of-type(2)', el => el.textContent);
       const l_text = await item.$eval('li.item_long_text', el => el.textContent);
       const year = await item.$eval('label span', el => el.textContent);
