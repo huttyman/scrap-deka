@@ -5,8 +5,9 @@ async function run() {
   const browser = await puppeteer.launch({headless:false});
   const page = await browser.newPage();
   await page.goto('http://deka.supremecourt.or.th/');
-  await page.type('#search_deka_start_year', '2560', {delay: 120});
-  await page.type('#search_deka_end_year', '2566', {delay: 120});
+  await page.type('#search_deka_start_year', '2550', {delay: 120});
+  await page.type('#search_deka_end_year', '2559', {delay: 120});
+  // await page.type('#search_deka_no', '1468/2566', {delay: 120});
 
   await page.screenshot({path:'example.png',fullPage:true})
 
@@ -28,8 +29,8 @@ async function run() {
 
  
   // Initialization of the CSV content with headers
-  let csvDekaContent = "topic,doc_id,s_text,l_text,page,year\n";
-  let csvLawContent = "doc_id,first_elm,second_elm\n";
+  let csvDekaContent = "topic;doc_id;s_text;l_text;page;year\n";
+  let csvLawContent = "doc_id;first_elm;second_elm\n";
 
   let hasNextPage = true;
   let pageNumber = 0;
@@ -37,8 +38,8 @@ async function run() {
   while (hasNextPage) {
     // Wait for the elements to be loaded
     pageNumber++;
-    if(pageNumber==1)
-      hasNextPage = false;
+    // if(pageNumber==1)
+    //   hasNextPage = false;
     
     await page.waitForSelector('.clear > ul', { timeout: 5000 });
 
@@ -58,14 +59,17 @@ async function run() {
 
       const doc_idElement = await item.$('.deka-result');
       const topicElement = await item.$('.show-display-left label');
-      const s_textElement = await item.$('.item_short_text p:nth-of-type(2)');
+      const s_textElement = await item.$('li.item_short_text');
       const l_textElement = await item.$('li.item_long_text');
+      
 
       const doc_id = doc_idElement ? await page.evaluate(el => el.value, doc_idElement) : '';
       const topic = topicElement ? await page.evaluate(el => el.textContent, topicElement) : '';
-      const s_text = s_textElement ? await page.evaluate(el => el.textContent, s_textElement) : '';
-      const l_text = l_textElement ? await page.evaluate(el => el.textContent, l_textElement) : '';
+      let s_text = s_textElement ? await page.evaluate(el => el.textContent, s_textElement) : '';
+      let l_text = l_textElement ? await page.evaluate(el => el.textContent, l_textElement) : '';
 
+      s_text = s_text.replace(/\n/g, ' ');
+      l_text = l_text.replace(/\n/g, ' ');
       //year
       const parts = topic.split('/');
       const year = parts.length > 1 ? parts[1].trim() : '';
@@ -74,17 +78,16 @@ async function run() {
       const lawItems = await item.$$('.print_item_law li');
       for (const lawItem of lawItems) {
         // Get text from the second span, if it exists
-        const secondSpanText = await lawItem.$eval('span:nth-of-type(2)', span => span.textContent).catch(() => 'N/A');
+        const secondSpanText = await lawItem.$eval('span:nth-of-type(2)', span => span.textContent).catch(() => '');
         // Get text from the third span, if it exists
-        const thirdSpanText = await lawItem.$eval('span:nth-of-type(3)', span => span.textContent).catch(() => 'N/A');
+        const thirdSpanText = await lawItem.$eval('span:nth-of-type(3)', span => span.textContent).catch(() => '');
 
         // Print out the texts from the second and third span elements
-        console.log(`Second Span: ${secondSpanText}, Third Span: ${thirdSpanText}`);
-        csvLawContent += `"${doc_id}","${secondSpanText}","${thirdSpanText}"\n`;
+        csvLawContent += `"${doc_id}";"${secondSpanText}";"${thirdSpanText}"\n`;
       }
 
       // Append the fetched data to the CSV string
-      csvDekaContent += `"${topic}","${doc_id}","${s_text}","${l_text}","${pageNumber}","${year}"\n`;
+      csvDekaContent += `"${topic}";"${doc_id}";"${s_text}";"${l_text}";"${pageNumber}";"${year}"\n`;
     }
 
     // Check for the "Next Page" button and click if available
@@ -92,7 +95,7 @@ async function run() {
     const nextPageButton = await page.$(nextPageButtonSelector);
     if (nextPageButton) {
       await nextPageButton.click();
-      await page.waitForNavigation({ waitUntil: 'networkidle0' });
+      await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 });
     } else {
       hasNextPage = false; // Stop the loop if "Next Page" button is not found
     }
