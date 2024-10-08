@@ -5,8 +5,8 @@ async function run() {
   const browser = await puppeteer.launch({headless:false});
   const page = await browser.newPage();
   await page.goto('http://deka.supremecourt.or.th/');
-  await page.type('#search_deka_start_year', '2550', {delay: 120});
-  await page.type('#search_deka_end_year', '2559', {delay: 120});
+  await page.type('#search_deka_start_year', '2556', {delay: 120});
+  await page.type('#search_deka_end_year', '2560',{delay: 120});
   // await page.type('#search_deka_no', '1468/2566', {delay: 120});
 
   await page.screenshot({path:'example.png',fullPage:true})
@@ -22,15 +22,15 @@ async function run() {
   await linkEx.click();
 
   // Step 4: Wait for the navigation to complete
-  await page.waitForNavigation({ waitUntil: 'networkidle0' });
+  await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 200000 });
 
   await page.screenshot({ path: 'new_first_page_screenshot.png' });
 
 
- 
+
   // Initialization of the CSV content with headers
-  let csvDekaContent = "topic;doc_id;s_text;l_text;page;year\n";
-  let csvLawContent = "doc_id;first_elm;second_elm\n";
+  let csvDekaContent = "topic|doc_id|s_text|l_text|page|year\n";
+  let csvLawContent = "doc_id|first_elm|second_elm\n";
 
   let hasNextPage = true;
   let pageNumber = 0;
@@ -38,10 +38,11 @@ async function run() {
   while (hasNextPage) {
     // Wait for the elements to be loaded
     pageNumber++;
-    // if(pageNumber==1)
+    // if(pageNumber==3)
+    //   await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"], timeout: 50000  });
     //   hasNextPage = false;
     
-    await page.waitForSelector('.clear > ul', { timeout: 5000 });
+    await page.waitForSelector('.clear > ul', { timeout: 5100 });
 
     // Retrieve and iterate through the list of elements
     const listItems = await page.$$('.clear > ul');
@@ -83,22 +84,35 @@ async function run() {
         const thirdSpanText = await lawItem.$eval('span:nth-of-type(3)', span => span.textContent).catch(() => '');
 
         // Print out the texts from the second and third span elements
-        csvLawContent += `"${doc_id}";"${secondSpanText}";"${thirdSpanText}"\n`;
+        csvLawContent += `"${doc_id}"|"${secondSpanText}"|"${thirdSpanText}"\n`;
       }
 
       // Append the fetched data to the CSV string
-      csvDekaContent += `"${topic}";"${doc_id}";"${s_text}";"${l_text}";"${pageNumber}";"${year}"\n`;
+      csvDekaContent += `"${topic}"|"${doc_id}"|"${s_text}"|"${l_text}"|"${pageNumber}"|"${year}"\n`;
     }
-
+    
     // Check for the "Next Page" button and click if available
-    const nextPageButtonSelector = 'a:has(> span.glyphicon.glyphicon-chevron-right):not(:has(> span:nth-of-type(2)))';
-    const nextPageButton = await page.$(nextPageButtonSelector);
-    if (nextPageButton) {
-      await nextPageButton.click();
-      await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 });
-    } else {
-      hasNextPage = false; // Stop the loop if "Next Page" button is not found
+    try{
+      const nextPageButtonSelector = 'a:has(> span.glyphicon.glyphicon-chevron-right):not(:has(> span:nth-of-type(2)))';
+      const nextPageButton = await page.$(nextPageButtonSelector);
+      if (nextPageButton) {
+        await nextPageButton.click();
+
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 200000 });
+      } else {
+        hasNextPage = false; // Stop the loop if "Next Page" button is not found
+      }
     }
+    catch (error) {
+      if (error.name === 'TimeoutError') {
+        console.log('Failed to navigate to next page, refreshing page ...'+pageNumber);
+        await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"], timeout: 50000  });
+        continue; // Try the current page again
+      } else {
+        throw error;
+      }
+    }
+    
   }
 
   // Step 5: Take a screenshot of the new page
@@ -114,7 +128,7 @@ async function run() {
   // Step 5: Take a screenshot of the new page
   await page.screenshot({ path: 'new_page_screenshot.png' });
 
-  await browser.close();
+  // await browser.close();
 }
 
 run();
