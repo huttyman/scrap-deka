@@ -2,16 +2,7 @@ const { setTimeout } = require('node:timers/promises');
 const puppeteer = require('puppeteer');
 const { Client } = require('pg');
 
-const projectList = [
-  {
-    url: 'https://propertyhub.in.th/%E0%B9%80%E0%B8%8A%E0%B9%88%E0%B8%B2%E0%B8%84%E0%B8%AD%E0%B8%99%E0%B9%82%E0%B8%94/%E0%B9%82%E0%B8%84%E0%B8%A3%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3-aspire-asoke-ratchada',
-    name: 'aspire-asoke-ratchada'
-  },
-  {
-    url: 'https://propertyhub.in.th/%E0%B9%80%E0%B8%8A%E0%B9%88%E0%B8%B2%E0%B8%84%E0%B8%AD%E0%B8%99%E0%B9%82%E0%B8%94/%E0%B9%82%E0%B8%84%E0%B8%A3%E0%B8%87%E0%B8%81%E0%B8%B2%E0%B8%A3-lumpini-park-rama-9-ratchada',
-    name: 'lumpini-park-rama-9-ratchada'
-  }
-];
+const { projectList } = require('./projectList');
 
 (async () => {
   // PostgreSQL connection setup
@@ -29,6 +20,7 @@ const projectList = [
     // Create apartments table if it doesn't exist
     await client.query(`
       CREATE TABLE IF NOT EXISTS apartments (
+        room_id VARCHAR(50),
         id SERIAL PRIMARY KEY,
         title VARCHAR(255),
         url TEXT,
@@ -72,7 +64,7 @@ const projectList = [
       // Function to scrape apartment data from the current page
       const scrapeCurrentPage = async () => {
         const pageData = await page.evaluate(() => {
-          const apartmentElements = document.querySelectorAll('.sc-152o12i-0.tLuGm.sc-i5hg7z-1.hwrlNi');
+          const apartmentElements = document.querySelectorAll('.sc-152o12i-0.tLuGm.sc-i5hg7z-1.hwrlNi, .sc-152o12i-0.tLuGm.sc-i5hg7z-1.iokjfP');
           const data = [];
           
           apartmentElements.forEach((element) => {
@@ -98,8 +90,9 @@ const projectList = [
                 floor = value;
               }
             });
-            
-            data.push({ title, url, price, roomType, size, floor });
+
+            const roomId = url.match(/--(\d+)$/)?.[1];
+            data.push({ title, url, price, roomType, size, floor, roomId });
           });
           return data;
         });
@@ -132,9 +125,9 @@ const projectList = [
       // Insert data into PostgreSQL
       const today = new Date().toISOString().split('T')[0];
       for (const apartment of apartments) {
-        const { title, url, price, roomType, size, floor } = apartment;
+        const { title, url, price, roomType, size, floor, roomId } = apartment;
         const pricePerSqm = parseFloat(price) / parseFloat(size);
-        await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm, project) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ', [title, url, price, roomType, size, floor, today, pricePerSqm, projectName]);
+        await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm, project, room_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [title, url, price, roomType, size, floor, today, pricePerSqm, projectName, roomId]);
       }
     }
 
