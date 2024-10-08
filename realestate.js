@@ -22,7 +22,9 @@ const { Client } = require('pg');
       price VARCHAR(50),
       room_type VARCHAR(100),
       size VARCHAR(50),
-      floor VARCHAR(50)
+      floor VARCHAR(50),
+      today_date DATE,
+      price_per_sqm NUMERIC
     );
   `);
 
@@ -69,9 +71,11 @@ const { Client } = require('pg');
   });
 
   // Insert data into PostgreSQL
+  const today = new Date().toISOString().split('T')[0];
   for (const apartment of apartments) {
     const { title, url, price, roomType, size, floor } = apartment;
-    await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor) VALUES ($1, $2, $3, $4, $5, $6)', [title, url, price, roomType, size, floor]);
+    const pricePerSqm = parseFloat(price) / parseFloat(size);
+    await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [title, url, price, roomType, size, floor, today, pricePerSqm]);
   }
 
   console.log('Data successfully scraped and stored in the database');
