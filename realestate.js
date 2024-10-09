@@ -44,6 +44,7 @@ const { projectList } = require('./projectList');
     });
 
     for (const project of projectList) {
+      console.log(`------------${project.name}------------`);
       const { url, name: projectName } = project;
 
       let retries = 3;
@@ -112,7 +113,7 @@ const { projectList } = require('./projectList');
           if (nextPageButton) {
             pageCount++;
             await nextPageButton.click();
-            await setTimeout(8000);
+            await setTimeout(5000);
           } else {
             hasNextPage = false;
           }
