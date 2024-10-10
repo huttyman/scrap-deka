@@ -56,11 +56,13 @@ const { projectList } = require('./projectList');
       let retries = 3;
       while (retries > 0) {
         try {
-          await page.goto(url, { timeout: 60000, waitUntil: 'networkidle2' });;
+          await page.goto(url, { timeout: 60000, waitUntil: 'networkidle2' });
           break;
         } catch (error) {
-          console.error(`Error navigating to ${url}: ${error}. Retries left: ${retries - 1}`);
+          console.error(`Error navigating to ${url}: ${error.message}`);
+          console.error(`Error stack trace: ${error.stack}`);
           retries--;
+          console.log(`Retries left: ${retries}`);
           if (retries === 0) throw error;
         }
       }
