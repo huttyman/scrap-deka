@@ -61,6 +61,7 @@ const { projectList } = require('./projectList');
         } catch (error) {
           console.error(`Error navigating to ${url}: ${error.message}`);
           console.error(`Error stack trace: ${error.stack}`);
+          await page.screenshot({ path: `error_${retries}.png` });
           retries--;
           console.log(`Retries left: ${retries}`);
           if (retries === 0) throw error;
