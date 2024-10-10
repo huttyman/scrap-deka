@@ -40,6 +40,8 @@ const { projectList } = require('./projectList');
       executablePath: '/usr/bin/chromium-browser',
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
+    //for macbook
+    // const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     await page.setExtraHTTPHeaders({
@@ -54,7 +56,7 @@ const { projectList } = require('./projectList');
       let retries = 3;
       while (retries > 0) {
         try {
-          await page.goto(url, { waitUntil: 'domcontentloaded' });
+          await page.goto(url, { timeout: 60000, waitUntil: 'networkidle2' });;
           break;
         } catch (error) {
           console.error(`Error navigating to ${url}: ${error}. Retries left: ${retries - 1}`);
