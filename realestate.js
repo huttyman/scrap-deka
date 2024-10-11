@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer');
 const { Client } = require('pg');
 const { projectList } = require('./projectList');
 
+console.log(`======================================== ${new Date().toISOString()} ========================================`);
 (async () => {
   // PostgreSQL connection setup
   const client = new Client({
