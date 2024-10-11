@@ -29,7 +29,8 @@ const { projectList } = require('./projectList');
         floor VARCHAR(50),
         today_date DATE,
         price_per_sqm NUMERIC,
-        project VARCHAR(100)
+        project VARCHAR(100),
+        updated_time TIMESTAMP
       );
     `);
 
@@ -132,10 +133,11 @@ const { projectList } = require('./projectList');
 
       // Insert data into PostgreSQL
       const today = new Date().toISOString().split('T')[0];
+      const updatedTime = new Date().toISOString();
       for (const apartment of apartments) {
         const { title, url, price, roomType, size, floor, roomId } = apartment;
         const pricePerSqm = parseFloat(price) / parseFloat(size);
-        await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm, project, room_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [title, url, price, roomType, size, floor, today, pricePerSqm, projectName, roomId]);
+        await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm, project, room_id, updated_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)', [title, url, price, roomType, size, floor, today, pricePerSqm, projectName, roomId, updatedTime]);
       }
 
       // Close the page to free resources
