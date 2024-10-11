@@ -31,7 +31,8 @@ console.log(`======================================== ${new Date().toISOString()
         today_date DATE,
         price_per_sqm NUMERIC,
         project VARCHAR(100),
-        updated_time TIMESTAMP
+        updated_time TIMESTAMP,
+        img_src TEXT
       );
     `);
 
@@ -100,9 +101,9 @@ console.log(`======================================== ${new Date().toISOString()
                 floor = value;
               }
             });
-
+            const imgSrc = element.querySelector('.sc-152o12i-0.tLuGm.sc-i5hg7z-1.hwrlNi img')?.getAttribute('src');
             const roomId = url.match(/--(\d+)$/)?.[1];
-            data.push({ title, url, price, roomType, size, floor, roomId });
+            data.push({ title, url, price, roomType, size, floor, roomId, imgSrc });
           });
           return data;
         });
@@ -136,9 +137,10 @@ console.log(`======================================== ${new Date().toISOString()
       const today = new Date().toISOString().split('T')[0];
       const updatedTime = new Date().toISOString();
       for (const apartment of apartments) {
-        const { title, url, price, roomType, size, floor, roomId } = apartment;
+        const { title, url, price, roomType, size, floor, roomId, imgSrc } = apartment;
         const pricePerSqm = parseFloat(price) / parseFloat(size);
-        await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm, project, room_id, updated_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)', [title, url, price, roomType, size, floor, today, pricePerSqm, projectName, roomId, updatedTime]);
+        await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm, project, room_id, updated_time, img_src) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', [title, url, price, roomType, size, floor, today, pricePerSqm, projectName, roomId, updatedTime, imgSrc]);
+
       }
 
       // Close the page to free resources
