@@ -1,7 +1,6 @@
 const { setTimeout } = require('node:timers/promises');
 const puppeteer = require('puppeteer');
 const { Client } = require('pg');
-
 const { projectList } = require('./projectList');
 
 (async () => {
@@ -35,23 +34,23 @@ const { projectList } = require('./projectList');
     `);
 
     // Launch Puppeteer
-    const browser = await puppeteer.launch({
+    let browser = await puppeteer.launch({
       headless: true,
       executablePath: '/usr/bin/chromium-browser',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    //for macbook
-    // const browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    await page.setExtraHTTPHeaders({
-      'accept-language': 'en-US,en;q=0.9',
-      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process', '--no-zygote', '--js-flags="--max-old-space-size=2048"']
     });
 
     for (const project of projectList) {
       console.log(`------------${project.name}------------`);
       const { url, name: projectName } = project;
+
+      // Create a new page for each project
+      const page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      await page.setExtraHTTPHeaders({
+        'accept-language': 'en-US,en;q=0.9',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
+      });
 
       let retries = 3;
       while (retries > 0) {
@@ -60,7 +59,6 @@ const { projectList } = require('./projectList');
           break;
         } catch (error) {
           console.error(`Error navigating to ${url}: ${error.message}`);
-          console.error(`Error stack trace: ${error.stack}`);
           await page.screenshot({ path: `error_${retries}.png` });
           retries--;
           console.log(`Retries left: ${retries}`);
@@ -76,22 +74,22 @@ const { projectList } = require('./projectList');
         const pageData = await page.evaluate(() => {
           const apartmentElements = document.querySelectorAll('.sc-152o12i-0.tLuGm.sc-i5hg7z-1.hwrlNi, .sc-152o12i-0.tLuGm.sc-i5hg7z-1.iokjfP');
           const data = [];
-          
+
           apartmentElements.forEach((element) => {
             const title = element.querySelector('a.sc-152o12i-9.fhmSYQ')?.innerText;
             const url = element.querySelector('a.sc-152o12i-9.fhmSYQ')?.getAttribute('href');
             const priceElement = element.querySelector('.sc-152o12i-7.dKuoZx.priceTag.roomPrice span:nth-child(2), .sc-152o12i-7.dKuoZx.priceTag.roomPrice div span:nth-child(1)');
             const price = priceElement ? priceElement.innerText.replace(/[^0-9]/g, '') : null;
-            
+
             let roomType = '';
             let size = '';
             let floor = '';
-            
+
             const details = element.querySelectorAll('div.sc-152o12i-8.iHoJeR > div');
             details.forEach((detail) => {
               const label = detail.querySelector('span.desc')?.innerText;
               const value = detail.innerText.replace(label, '').trim();
-              
+
               if (label === 'ประเภทห้อง') {
                 roomType = value;
               } else if (label === 'ขนาดพื้นที่ห้อง') {
@@ -139,6 +137,11 @@ const { projectList } = require('./projectList');
         const pricePerSqm = parseFloat(price) / parseFloat(size);
         await client.query('INSERT INTO apartments (title, url, price, room_type, size, floor, today_date, price_per_sqm, project, room_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [title, url, price, roomType, size, floor, today, pricePerSqm, projectName, roomId]);
       }
+
+      // Close the page to free resources
+      await page.close();
+      // Add a small delay between projects to reduce load
+      await setTimeout(1000);
     }
 
     console.log('Data successfully scraped and stored in the database');
