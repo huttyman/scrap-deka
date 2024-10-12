@@ -1,5 +1,7 @@
 const { setTimeout } = require('node:timers/promises');
-const puppeteer = require('puppeteer');
+const { addExtra } = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const puppeteer = addExtra(require('puppeteer'));
 const { Client } = require('pg');
 const { projectList } = require('./projectList_dd');
 
@@ -37,9 +39,11 @@ console.log(`======================================== ${new Date().toISOString()
     `);
 
     // Launch Puppeteer
+        puppeteer.use(StealthPlugin());
+
     let browser = await puppeteer.launch({
       headless: false,
-   });
+    });
     
     for (const project of projectList) {
       console.log(`------------${project.name}------------`);
@@ -57,7 +61,7 @@ console.log(`======================================== ${new Date().toISOString()
       while (retries > 0) {
         try {
           await page.goto(url, { timeout: 60000, waitUntil: 'networkidle2' });
-          break;
+                    break;
         } catch (error) {
           console.error(`Error navigating to ${url}: ${error.message}`);
           await page.screenshot({ path: `error_${retries}.png` });
@@ -118,7 +122,7 @@ console.log(`======================================== ${new Date().toISOString()
         // Check if there's a next page button and click it
         try {
           const nextPageButton = await page.$('.pagination .pagination-next a');
-          console.log('nextPageButton:', nextPageButton.jsonValue());
+          console.log('nextPageButton:', nextPageButton);
           if (nextPageButton) {
             pageCount++;
             const nextPageUrlHandle = await nextPageButton.getProperty('href');
