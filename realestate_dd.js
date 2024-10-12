@@ -117,10 +117,14 @@ console.log(`======================================== ${new Date().toISOString()
 
         // Check if there's a next page button and click it
         try {
-          const nextPageButton = await page.$('.new-next-page-class');
+          const nextPageButton = await page.$('.pagination .pagination-next a');
+          console.log('nextPageButton:', nextPageButton.jsonValue());
           if (nextPageButton) {
             pageCount++;
-            await nextPageButton.click();
+            const nextPageUrlHandle = await nextPageButton.getProperty('href');
+            const nextPageUrl = await nextPageUrlHandle.jsonValue();
+            console.log('nextPageUrl',nextPageUrl)
+            await page.goto(nextPageUrl, { timeout: 60000, waitUntil: 'networkidle2' });
             await setTimeout(5000);
           } else {
             hasNextPage = false;
