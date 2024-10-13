@@ -42,7 +42,7 @@ console.log(`======================================== ${new Date().toISOString()
         puppeteer.use(StealthPlugin());
 
     let browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
     });
     
     for (const project of projectList) {
@@ -51,6 +51,9 @@ console.log(`======================================== ${new Date().toISOString()
 
       // Create a new page for each project
       const page = await browser.newPage();
+      await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+      });
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
       await page.setExtraHTTPHeaders({
         'accept-language': 'en-US,en;q=0.9',
@@ -122,12 +125,10 @@ console.log(`======================================== ${new Date().toISOString()
         // Check if there's a next page button and click it
         try {
           const nextPageButton = await page.$('.pagination .pagination-next a');
-          console.log('nextPageButton:', nextPageButton);
           if (nextPageButton) {
             pageCount++;
             const nextPageUrlHandle = await nextPageButton.getProperty('href');
             const nextPageUrl = await nextPageUrlHandle.jsonValue();
-            console.log('nextPageUrl',nextPageUrl)
             await page.goto(nextPageUrl, { timeout: 60000, waitUntil: 'networkidle2' });
             await setTimeout(5000);
           } else {
