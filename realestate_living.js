@@ -121,7 +121,10 @@ const floor = floorElement ? floorElement.nextSibling.textContent.trim().match(/
 
         // Check if there's a next page button and click it
         try {
-          const nextPageButton = await page.$('.pagination .pagination-next a');
+          const nextPageButton = await page.evaluateHandle(() => {
+            const paginationLinks = Array.from(document.querySelectorAll('.pagination a'));
+            return paginationLinks.find(link => link.textContent.trim() === 'Next ›');
+          });
           if (nextPageButton) {
             pageCount++;
             const nextPageUrlHandle = await nextPageButton.getProperty('href');
