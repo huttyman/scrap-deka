@@ -3,7 +3,7 @@ const { addExtra } = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const puppeteer = addExtra(require('puppeteer'));
 const { Client } = require('pg');
-const { projectList } = require('./projectList_dd');
+const { projectList } = require('./projectList');
 
 console.log(`========================================dd ${new Date().toISOString()} ========================================`);
 (async () => {
@@ -47,7 +47,7 @@ console.log(`========================================dd ${new Date().toISOString
     
     for (const project of projectList) {
       console.log(`------------${project.name}------------`);
-      const { url, name: projectName } = project;
+      const {url_dd: url, name: projectName } = project;
 
       // Create a new page for each project
       const page = await browser.newPage();

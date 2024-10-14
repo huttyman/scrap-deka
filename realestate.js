@@ -45,7 +45,7 @@ console.log(`======================================== ${new Date().toISOString()
 
     for (const project of projectList) {
       console.log(`------------${project.name}------------`);
-      const { url, name: projectName } = project;
+      const { url_hub: url, name: projectName } = project;
 
       // Create a new page for each project
       const page = await browser.newPage();
