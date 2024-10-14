@@ -1,0 +1,27 @@
+# Logs
+Logs/
+*.log
+
+# Node Modules
+node_modules/
+
+# Environment Variables
+.env
+
+# Puppeteer Cache and Dependencies
+.puppeteer/
+
+# Temporary Files
+*.tmp
+*.temp
+
+# MacOS System Files
+.DS_Store
+
+# Linux System Files
+*.swp
+
+# Output and Screenshots
+screenshots/
+output/
+Logs/*
