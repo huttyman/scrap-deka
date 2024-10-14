@@ -38,10 +38,7 @@ console.log(`======================================== ${new Date().toISOString()
 
     // Launch Puppeteer
     let browser = await puppeteer.launch({
-      headless: true,
-      executablePath: '/usr/bin/chromium-browser',
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--single-process', '--no-zygote', '--js-flags="--max-old-space-size=2048"']
-    });
+      headless: true });
 
     for (const project of projectList) {
       console.log(`------------${project.name}------------`);
