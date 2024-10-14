@@ -5,7 +5,7 @@ const puppeteer = addExtra(require('puppeteer'));
 const { Client } = require('pg');
 const { projectList } = require('./projectList_dd');
 
-console.log(`======================================== ${new Date().toISOString()} ========================================`);
+console.log(`========================================dd ${new Date().toISOString()} ========================================`);
 (async () => {
   // PostgreSQL connection setup
   const client = new Client({
@@ -89,23 +89,16 @@ console.log(`======================================== ${new Date().toISOString()
             const priceElement = element.querySelector('.list-price.pull-left .price');
             const price = priceElement ? priceElement.innerText.replace(/[^0-9]/g, '') : null;
 
-            let roomType = '';
-            let size = '';
+            const bedTypeElement = element.querySelector('span.bed');
+            const bathTypeElement = element.querySelector('span.bath');
+            const roomType = bedTypeElement && bathTypeElement ? `${bedTypeElement.getAttribute('title')}, ${bathTypeElement.getAttribute('title')}` : '';
+
+            const sizeElement = element.querySelector('li.listing-floorarea.pull-left:nth-child(2)');
+            const size = sizeElement ? sizeElement.textContent.trim().match(/\d+/)[0] : '';
+
             let floor = '';
 
-            const details = element.querySelectorAll('.listing-features.pull-left li');
-            details.forEach((detail) => {
-              const label = detail.querySelector('.new-label-class')?.innerText;
-              const value = detail.innerText.replace(label, '').trim();
-
-              if (label === 'Room Type') {
-                roomType = value;
-              } else if (label === 'Size') {
-                size = value.match(/\d+(\.\d+)?/)[0];
-              } else if (label === 'Floor') {
-                floor = value;
-              }
-            });
+      
             const imgSrc = element.querySelector('img')?.getAttribute('data-original');
             const roomId = element.getAttribute('data-listing-id');
             data.push({ title, url, price, roomType, size, floor, roomId, imgSrc });

@@ -5,7 +5,7 @@ const puppeteer = addExtra(require('puppeteer'));
 const { Client } = require('pg');
 const { projectList } = require('./projectList_living');
 
-console.log(`======================================== ${new Date().toISOString()} ========================================`);
+console.log(`========================================living ${new Date().toISOString()} ========================================`);
 (async () => {
   // PostgreSQL connection setup
   const client = new Client({
